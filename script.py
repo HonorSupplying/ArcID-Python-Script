@@ -21,7 +21,7 @@ def create_user_api(name,api_url):
             "Content-Type" : "application/json",
             "Accept" : "application/json",
             "x-api-key" : "hid_arcid"
-        })
+        },verify="server.pem")
         print(response.json())
         print(response.content)
         return response.status_code
@@ -73,7 +73,7 @@ def process_images(folder_path, api_url):
 if __name__ == "__main__":
     
     IMAGE_FOLDER = "./img"  # Change to your folder path
-    API_ENDPOINT = "http://127.0.0.1:3000/upload"  # Change to your API URL
+    API_ENDPOINT = "https://127.0.0.1"  # Change to your API URL
     process_images(IMAGE_FOLDER, API_ENDPOINT)
     
 
