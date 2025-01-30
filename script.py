@@ -22,12 +22,15 @@ def create_user_api(name,api_url):
             "Accept" : "application/json",
             "x-api-key" : "hid_arcid"
         },verify=False)
-        print(response.json())
-        print(response.content)
-        id = response.json()["user"]["id"]
+        if response.status_code == 200 {
+            id = response.json()["user"]["id"]
+        }else{
+
+        }
+        
         return [response.status_code,id]
     except Exception as e:
-        print(f"Failed: {e}")
+        print(f"Create User Failed: {e}")
         return []
     
 
@@ -37,7 +40,6 @@ def add_image_api(user_id,api_url,base64):
         print(f"Processing: {user_id}")
         response = requests.post(url=api_url+"/api/v1/credentials",json={
             "user_id":user_id,
-            "get_quantity":[0],
             "suppress_liveness":False,
             "biometric_data":{
                 "modality":"face",
@@ -51,6 +53,7 @@ def add_image_api(user_id,api_url,base64):
         },verify=False)
         if response.status_code == 200:
             print(f"Add image to user {user_id} success")
+            return response.status_code
         else:
             print(f"Add image error")
     except Exception as e:
@@ -66,24 +69,16 @@ def create_and_add(name,image_path, api_url):
         res = create_user_api(name,api_url)
         if res[0] == 200:
             res = add_image_api(res[1],api_url,base64)
+            if res == 200:
+                os.remove(image_path)
+                print(f"Deleted: {image_path} success.")
+            else:
+                print(f"Delete: {image_path} failed.")
         else:
             print("Error create user")
 
-        # with open(image_path, 'rb') as f:
-        #     image_file = f.read()
-        #     files = {'image': image_file}
-        #     response = requests.post(api_url, files=files)
-        #     print(response.content)
-        #     print(response.status_code)
-        #     if response.status_code == 200:
-        #         print(f"Successfully uploaded: {image_path}")
-        #         return image_path
-        #     else:
-        #         print(f"Failed to upload {image_path}: {response.status_code}")
-        #         return None
     except Exception as e:
         print(f"Error create user {image_path}: {e}")
-        return None
 
 
 def process_images(folder_path, api_url):
@@ -104,15 +99,3 @@ if __name__ == "__main__":
     process_images(IMAGE_FOLDER, API_ENDPOINT)
     
 
-    # image_path is set of all image in folder
-    # for index,paths in enumerate(image_paths) :
-    #     print(paths)
-    #     base64 = image_to_base64(paths)
-    #     upload_image(image_paths[0],api_url)
-            
-    
-    
-    # for image_path in results:
-    #     if image_path:
-    #         os.remove(image_path)
-    #         print(f"Deleted: {image_path}")
