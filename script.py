@@ -12,7 +12,7 @@ def image_to_base64(image_path):
         print(f"Error converting {image_path} to Base64: {e}")
         return None
 
-def create_user_api(name,api_url):
+def create_user_api(name,api_url,base64,image_path):
     """ Create user function api """
     try:
         response = requests.post(url=api_url+"/api/v1/users",json={
@@ -22,22 +22,21 @@ def create_user_api(name,api_url):
             "Accept" : "application/json",
             "x-api-key" : "hid_arcid"
         },verify=False)
-        if response.status_code == 200 {
-            id = response.json()["user"]["id"]
-        }else{
 
-        }
-        
-        return [response.status_code,id]
+        if response.status_code == 200:
+            print(f"Create user with external_id : {name} success")
+            id = response.json()["user"]["id"]
+            add_image_api(id,api_url,base64,image_path)
+        else:
+            print(f"Error create user : {response.content}")
     except Exception as e:
         print(f"Create User Failed: {e}")
         return []
     
 
-def add_image_api(user_id,api_url,base64):
+def add_image_api(user_id,api_url,base64,image_path):
     """ Add image to user """
     try:
-        print(f"Processing: {user_id}")
         response = requests.post(url=api_url+"/api/v1/credentials",json={
             "user_id":user_id,
             "suppress_liveness":False,
@@ -53,9 +52,11 @@ def add_image_api(user_id,api_url,base64):
         },verify=False)
         if response.status_code == 200:
             print(f"Add image to user {user_id} success")
-            return response.status_code
+            os.remove(image_path)
+            print(f"Deleted: {image_path} success.")
+  
         else:
-            print(f"Add image error")
+            print(f"Add image error {response.content}")
     except Exception as e:
         print("Error add picture : {e}")
 
@@ -66,16 +67,7 @@ def create_and_add(name,image_path, api_url):
     try:
         print(f"Processing: {image_path}")
         base64 = image_to_base64(image_path)
-        res = create_user_api(name,api_url)
-        if res[0] == 200:
-            res = add_image_api(res[1],api_url,base64)
-            if res == 200:
-                os.remove(image_path)
-                print(f"Deleted: {image_path} success.")
-            else:
-                print(f"Delete: {image_path} failed.")
-        else:
-            print("Error create user")
+        create_user_api(name,api_url,base64,image_path)
 
     except Exception as e:
         print(f"Error create user {image_path}: {e}")
